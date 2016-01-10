@@ -1,4 +1,4 @@
-var validatorFactory = require('../../src/validator-factory');
+var validatorFactory = require('../../index').validatorFactory;
 var assign = require('lodash.assign');
 var clone = require('lodash.clone');
 var expect = require('chai').expect;

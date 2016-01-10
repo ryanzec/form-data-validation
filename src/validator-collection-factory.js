@@ -1,4 +1,4 @@
-var _ = require('lodash');
+var forEach = require('lodash.foreach');
 
 module.exports = function validatorCollectionFactoryCreate(validatorsObject) {
   return {

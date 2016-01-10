@@ -1,4 +1,4 @@
-var schemaFactory = require('../../src/schema-factory');
+var schemaFactory = require('../../index').schemaFactory;
 var deepEqual = require('deep-equal');
 var expect = require('chai').expect;
 
