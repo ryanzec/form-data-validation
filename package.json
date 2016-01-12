@@ -1,0 +1,50 @@
+{
+  "name": "form-data-validation",
+  "version": "0.5.0",
+  "description": "A framework agnostic javascript form data storage / validation solution",
+  "keywords": [
+    "form",
+    "data",
+    "valid",
+    "validate",
+    "validation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ryanzec/form-data-validation"
+  },
+  "bugs": {
+    "url": "https://github.com/ryanzec/form-data-validation/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Ryan Zec",
+    "email": "code@ryanzec.com",
+    "url": "http://www.ryanzec.com"
+  },
+  "dependencies": {
+    "lodash.assign": "3.x.x",
+    "lodash.foreach": "3.x.x",
+    "lodash.isarray": "3.x.x",
+    "lodash.isstring": "3.x.x",
+    "immutable": "3.x.x"
+  },
+  "peerDependencies": {
+    "lodash.assign": "3.x.x",
+    "lodash.foreach": "3.x.x",
+    "lodash.isarray": "3.x.x",
+    "lodash.isstring": "3.x.x",
+    "immutable": "3.x.x"
+  },
+  "devDependencies": {
+    "mocha": "1.20.1",
+    "sinon": "1.10.3",
+    "chai": "1.9.1",
+    "lodash.clone": "3.0.x",
+    "deep-equal": "1.0.0"
+  },
+  "engines": {
+    "node": ">=0.10.33"
+  },
+  "main": "index.js"
+}
