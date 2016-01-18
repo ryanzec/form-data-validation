@@ -8,7 +8,6 @@ var isValueEmpty = function isValueEmpty(value) {
 module.exports = function validatorFactoryCreate(options) {
   options = options || {};
   options = assign({
-    renderValidation: 'invalid',
     validateValueOnCreate: undefined,
     validators: [],
     initialValue: null,
@@ -26,7 +25,7 @@ module.exports = function validatorFactoryCreate(options) {
 
   validator.lastValidatedValue = null;
 
-  validator._valid = true;
+  validator._valid = null;
 
   validator.validationErrors = [];
 
@@ -55,32 +54,29 @@ module.exports = function validatorFactoryCreate(options) {
     }
   };
 
-  validator.shouldRenderValidation = function validatorShouldRenderValidation() {
-    return (
-      options.renderValidation !== false
-      && options.isActive
-      && this.validationHasHappened === true
-      && (
-        this.valid && options.renderValidation !== 'invalid'
-        || !this.valid && options.renderValidation !== 'valid'
-      )
-    );
-  };
-
   validator.reset = function validatorReset() {
     this.validationHasHappened = false;
     this.lastValidatedValue = null;
-    this.valid = true;
+    this.valid = null;
     this.validationErrors = [];
+
+    if (options.validateValueOnCreate !== undefined) {
+      this.validate(options.validateValueOnCreate);
+    }
   };
 
   validator.updateOptions = function validatorUpdateOptions(newOptions) {
     options = assign(options, newOptions);
   };
 
+  validator.isActive = function() {
+    return options.isActive;
+  };
+
+  //TODO: this propbably should just be a method (trying to be fancy for no reason)
   Object.defineProperty(validator, 'valid', {
     get: function validatorCustomPropertyValueGet() {
-      return validator._valid || options.isActive === false;
+      return validator._valid;
     },
 
     set: function validatorCustomPropertyValueSet(newValue) {

@@ -144,93 +144,13 @@ var validatorConfigMinMaxLengthMatchWithMessageAllowEmpty = {
 };
 
 describe('validator factory', function() {
-  describe('shouldRenderValidation', function() {
-    it('should return false if validation has not happened', function() {
-      var myValidator = validatorFactory(validatorConfigMinLength);
-
-      expect(myValidator.shouldRenderValidation()).to.be.false;
-    });
-
-    it('should return false if invalid but configured not to show validation', function() {
-      var myValidator = validatorFactory(assign(clone(validatorConfigMinLength, true), {
-        validateValueOnCreate: 'tes',
-        renderValidation: false
-      }));
-
-      expect(myValidator.shouldRenderValidation()).to.be.false;
-    });
-
-    it('should return false if valid but configured not to show validation', function() {
-      var myValidator = validatorFactory(assign(clone(validatorConfigMinLength, true), {
-        validateValueOnCreate: 'test',
-        renderValidation: false
-      }));
-
-      expect(myValidator.shouldRenderValidation()).to.be.false;
-    });
-
-    it('should return false if valid but configured for invalid only', function() {
-      var myValidator = validatorFactory(assign(clone(validatorConfigMinLength, true), {
-        validateValueOnCreate: 'test',
-        renderValidation: 'invalid'
-      }));
-
-      expect(myValidator.shouldRenderValidation()).to.be.false;
-    });
-
-    it('should return false if invalid but configured for valid only', function() {
-      var myValidator = validatorFactory(assign(clone(validatorConfigMinLength, true), {
-        validateValueOnCreate: 'tes',
-        renderValidation: 'valid'
-      }));
-
-      expect(myValidator.shouldRenderValidation()).to.be.false;
-    });
-
-    it('should return true if invalid and configured for invalid only', function() {
-      var myValidator = validatorFactory(assign(clone(validatorConfigMinLength, true), {
-        validateValueOnCreate: 'tes',
-        renderValidation: 'invalid'
-      }));
-
-      expect(myValidator.shouldRenderValidation()).to.be.true;
-    });
-
-    it('should return true if invalid and configured for both', function() {
-      var myValidator = validatorFactory(assign(clone(validatorConfigMinLength, true), {
-        validateValueOnCreate: 'tes',
-        renderValidation: 'both'
-      }));
-
-      expect(myValidator.shouldRenderValidation()).to.be.true;
-    });
-
-    it('should return true if valid and configured for valid only', function() {
-      var myValidator = validatorFactory(assign(clone(validatorConfigMinLength, true), {
-        validateValueOnCreate: 'test',
-        renderValidation: 'valid'
-      }));
-
-      expect(myValidator.shouldRenderValidation()).to.be.true;
-    });
-
-    it('should return true if valid and configured for both', function() {
-      var myValidator = validatorFactory(assign(clone(validatorConfigMinLength, true), {
-        validateValueOnCreate: 'test',
-        renderValidation: 'both'
-      }));
-
-      expect(myValidator.shouldRenderValidation()).to.be.true;
-    });
-  });
-
   it('should be able to create multiple instances', function() {
     var validator1 = validatorFactory(validatorsConfigNone);
     var validator2 = validatorFactory(validatorsConfigNone);
 
     validator2.valid = false;
 
-    expect(validator1.valid).to.be.true;
+    expect(validator1.valid).to.be.null;
     expect(validator2.valid).to.be.false;
   });
 
@@ -352,20 +272,8 @@ describe('validator factory', function() {
     myValidator.reset();
 
     expect(myValidator.lastValidatedValue).to.be.null;
-    expect(myValidator.valid).to.be.true;
+    expect(myValidator.valid).to.be.null;
     expect(myValidator.validationErrors).to.deep.equal([]);
-    expect(myValidator.shouldRenderValidation()).to.be.false;
-  });
-
-  it('should return valid if the validator is turn off', function() {
-    var myValidator = validatorFactory(validatorConfigMinMaxLength);
-    myValidator.validate('testtestt');
-
-    myValidator.updateOptions({
-      isActive: false
-    });
-
-    expect(myValidator.valid).to.be.true;
   });
 
   it('should be able to specific `this` context for the validator execution', function(done) {
@@ -386,5 +294,17 @@ describe('validator factory', function() {
       }]
     });
     myValidator.validate('testtestt');
+  });
+
+  it('should be able to update options', function() {
+    var validator = validatorFactory(validatorsConfigNone);
+
+    expect(validator.isActive()).to.be.true;
+
+    validator.updateOptions({
+      isActive: false
+    });
+
+    expect(validator.isActive()).to.be.false;
   });
 });
