@@ -4,7 +4,7 @@ var forEach = require('lodash.foreach');
 var isString = require('lodash.isstring');
 var immutable = require('immutable');
 
-module.exports = function formDataFactoryCreate(options) {
+module.exports = function(options) {
   var formData = {};
   var validators = {};
   var fields = immutable.Map({});
@@ -48,7 +48,12 @@ module.exports = function formDataFactoryCreate(options) {
     addField(fieldName, options);
   };
 
-  formData.get = function formDataGetValue(fieldName) {
+  formData.removeField = function(fieldName) {
+    delete validators[fieldName];
+    fields = fields.delete(fieldName);
+  };
+
+  formData.get = function(fieldName) {
     if (fieldName) {
       return fields.getIn([fieldName, 'value']);
     } else {
@@ -62,7 +67,7 @@ module.exports = function formDataFactoryCreate(options) {
     }
   };
 
-  formData.set = function formDataSetValue(fieldName, newValue, markAsDirty) {
+  formData.set = function(fieldName, newValue, markAsDirty) {
     if (markAsDirty !== false) {
       markAsDirty = true;
     }
@@ -99,7 +104,7 @@ module.exports = function formDataFactoryCreate(options) {
     fields = fields.setIn([fieldName, 'isDirty'], false);
   };
 
-  formData.reset = function formDataResetValue(fieldName) {
+  formData.reset = function(fieldName) {
     if (fieldName) {
       validators[fieldName].reset();
       fields = fields.setIn([fieldName, 'value'], fields.getIn([fieldName, 'initialValue']));
@@ -117,7 +122,7 @@ module.exports = function formDataFactoryCreate(options) {
     }
   };
 
-  formData.validate = function formDataValidate(fieldName) {
+  formData.validate = function(fieldName) {
     if (fieldName) {
       if (validators[fieldName].isActive()) {
         validators[fieldName].validate(fields.getIn([fieldName, 'value']));
@@ -171,9 +176,7 @@ module.exports = function formDataFactoryCreate(options) {
     }
   },
 
-  formData.isValid = function formDataIsValid(fieldName) {
-    this.validate(fieldName);
-
+  formData.isValid = function(fieldName) {
     if (fieldName) {
       return fields.getIn([fieldName, 'isValid']);
     } else {
@@ -193,7 +196,7 @@ module.exports = function formDataFactoryCreate(options) {
     }
   };
 
-  formData.isDirty = function formDataIsValid(fieldName) {
+  formData.isDirty = function(fieldName) {
     if (fieldName) {
       return fields.getIn([fieldName, 'isDirty']);
     } else {
@@ -208,6 +211,26 @@ module.exports = function formDataFactoryCreate(options) {
       }
 
       return isDirty;
+    }
+  };
+
+  formData.hasBeenValidated = function(fieldName) {
+    if (fieldName) {
+      return fields.getIn([fieldName, 'isValid']) !== null;
+    } else {
+      var hasBeenValidated = true;
+      var unvalidatedFields = [];
+      var fieldNames = Object.keys(fields.toJSON());
+      var count = fieldNames.length;
+
+      for(var x = 0; x < count; x += 1) {
+        if (fields.getIn([fieldNames[x], 'isValid']) === null) {
+          hasBeenValidated = false;
+          unvalidatedFields.push(fieldNames[x]);
+        }
+      }
+
+      return hasBeenValidated || unvalidatedFields;
     }
   };
 
@@ -249,31 +272,56 @@ module.exports = function formDataFactoryCreate(options) {
     }
   },
 
-  formData.getValidationMessages = function formDataGetValidationMessage (fieldName) {
-    if (fieldName) {
-      return fields.getIn([fieldName, 'validationErrors']).toJSON();
-    } else {
-      var fieldValidationMessages = null;
+  //NOTE: field names can be passed as arguments
+  formData.getValidationMessages = function() {
+    var passedFieldNames = Array.prototype.slice.call(arguments);
+    var fieldNamesToLoop = passedFieldNames.length > 0 ? passedFieldNames : Object.keys(fields.toJSON());
+    var fieldValidationMessages = null;
 
-      fields.forEach(function(field, fieldName) {
-        var validationErrors = fields.getIn([fieldName, 'validationErrors']).toJSON();
+    fieldNamesToLoop.forEach(function(fieldName) {
+      //TODO: should probably have error when trying to access fieldName that does not exist
+      var validationErrors = fields.getIn([fieldName, 'validationErrors']).toJSON();
 
-        if (validationErrors.length > 0) {
-          if (!fieldValidationMessages) {
-            fieldValidationMessages = {};
-          }
-
-          fieldValidationMessages[fieldName] = validationErrors;
+      if (validationErrors.length > 0) {
+        if (!fieldValidationMessages) {
+          fieldValidationMessages = [];
         }
-      });
 
-      return fieldValidationMessages;
-    }
+        fieldValidationMessages = fieldValidationMessages.concat(validationErrors);
+      }
+    });
+
+    return fieldValidationMessages;
   };
 
-  formData.getImmutable = function formDataGetImmutable() {
+  formData.getGroupedValidationMessages = function() {
+    var passedFieldNames = Array.prototype.slice.call(arguments);
+    var fieldNamesToLoop = passedFieldNames.length > 0 ? passedFieldNames : Object.keys(fields.toJSON());
+    var fieldValidationMessages = null;
+
+    fieldNamesToLoop.forEach(function(fieldName) {
+      //TODO: should probably have error when trying to access fieldName that does not exist
+      var validationErrors = fields.getIn([fieldName, 'validationErrors']).toJSON();
+
+      if (validationErrors.length > 0) {
+        if (!fieldValidationMessages) {
+          fieldValidationMessages = {};
+        }
+
+        fieldValidationMessages[fieldName] = validationErrors;
+      }
+    });
+
+    return fieldValidationMessages;
+  };
+
+  formData.asImmutable = function() {
     return fields;
-  }
+  };
+
+  formData.asJson = function() {
+    return fields.toJSON();
+  };
 
   return formData;
 };

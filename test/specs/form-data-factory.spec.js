@@ -276,11 +276,67 @@ describe('form data factory', function() {
         confirmPassword: ''
       });
     });
+
+    it('should be able to add fields after initial creation', function() {
+      var formData = formDataFactory(configSingle);
+
+      formData.addField('lastName', {});
+
+      expect(formData.get()).to.deep.equal({
+        firstName: '',
+        lastName: ''
+      });
+    });
+
+    it('should be able to remove fields after initial creation', function() {
+      var formData = formDataFactory(configSingle);
+
+      formData.addField('lastName', {});
+      formData.removeField('firstName');
+
+      expect(formData.get()).to.deep.equal({
+        lastName: ''
+      });
+    });
+
+    it('should be able to convert to JSON object', function() {
+      var formData = formDataFactory(configTwoValidation);
+
+      formData.set('lastName', 'test');
+
+      formData.validate();
+
+      expect(formData.asJson()).to.deep.equal({
+        firstName: {
+          initialValue: '',
+          value: '',
+          isValid: false,
+          validationErrors: [
+            '"" is not "test"'
+          ],
+          isDirty: false
+        },
+        lastName: {
+          initialValue: '',
+          value: 'test',
+          isValid: true,
+          validationErrors: [],
+          isDirty: true
+        }
+      });
+    });
   });
 
   describe('validation', function() {
+    it('should return null is validation has not be performed', function() {
+      var formData = formDataFactory(configValidation);
+
+      expect(formData.isValid('firstName')).to.be.null;
+    });
     it('should validate to false for specific field', function() {
       var formData = formDataFactory(configValidation);
+
+      formData.validate('firstName');
 
       expect(formData.isValid('firstName')).to.be.false;
     });
@@ -288,6 +344,8 @@ describe('form data factory', function() {
     it('should validate to true for specific field', function() {
       var formData = formDataFactory(configValidation);
       formData.set('firstName', 'test');
+
+      formData.validate('firstName');
 
       expect(formData.isValid('firstName')).to.be.true;
     });
@@ -314,6 +372,8 @@ describe('form data factory', function() {
         confirmPassword: 'test'
       });
 
+      formData.validate();
+
       expect(formData.isValid()).to.be.true;
     });
 
@@ -325,6 +385,11 @@ describe('form data factory', function() {
       expect(formData.getValidationMessages('firstName')).to.deep.equal([
         '"" is not "test"'
       ]);
+      expect(formData.getGroupedValidationMessages('firstName')).to.deep.equal({
+        firstName: [
+          '"" is not "test"'
+        ]
+      });
     });
 
     it('should be able to get validation messages for all fields', function() {
@@ -332,11 +397,18 @@ describe('form data factory', function() {
 
       formData.validate();
 
-      expect(formData.getValidationMessages()).to.deep.equal({
+      expect(formData.getValidationMessages()).to.deep.equal([
+        '"" is not "test"',
+        '"" is not "test"',
+        '"" is not "test"',
+        '"" is not "test"',
+        '"" is not "test"'
+      ]);
+      expect(formData.getGroupedValidationMessages()).to.deep.equal({
         firstName: [
           '"" is not "test"'
         ],
-        lastName: [
+        lastName:[
           '"" is not "test"'
         ],
         email: [
@@ -358,6 +430,7 @@ describe('form data factory', function() {
       formData.reset();
 
       expect(formData.getValidationMessages()).to.be.null;
+      expect(formData.getGroupedValidationMessages()).to.be.null;
     });
 
     it('should reset validation message when resetting a value', function() {
@@ -366,7 +439,13 @@ describe('form data factory', function() {
       formData.validate();
       formData.reset('firstName');
 
-      expect(formData.getValidationMessages()).to.deep.equal({
+      expect(formData.getValidationMessages()).to.deep.equal([
+        '"" is not "test"',
+        '"" is not "test"',
+        '"" is not "test"',
+        '"" is not "test"'
+      ]);
+      expect(formData.getGroupedValidationMessages()).to.deep.equal({
         lastName: [
           '"" is not "test"'
         ],
@@ -389,7 +468,13 @@ describe('form data factory', function() {
       formData.set('firstName', 'test');
       formData.validate();
 
-      expect(formData.getValidationMessages()).to.deep.equal({
+      expect(formData.getValidationMessages()).to.deep.equal([
+        '"" is not "test"',
+        '"" is not "test"',
+        '"" is not "test"',
+        '"" is not "test"'
+      ]);
+      expect(formData.getGroupedValidationMessages()).to.deep.equal({
         lastName: [
           '"" is not "test"'
         ],
@@ -411,7 +496,15 @@ describe('form data factory', function() {
       formData.set('firstName', 'tes');
       formData.validate();
 
-      expect(formData.getValidationMessages()).to.deep.equal({
+      expect(formData.getValidationMessages()).to.deep.equal([
+        '"tes" is not at least 4 characters',
+        '"tes" is not at least 5 characters',
+        '"" is not "test"',
+        '"" is not "test"',
+        '"" is not "test"',
+        '"" is not "test"'
+      ]);
+      expect(formData.getGroupedValidationMessages()).to.deep.equal({
         firstName: [
           '"tes" is not at least 4 characters',
           '"tes" is not at least 5 characters'
@@ -433,7 +526,14 @@ describe('form data factory', function() {
       formData.set('firstName', 'test');
       formData.validate();
 
-      expect(formData.getValidationMessages()).to.deep.equal({
+      expect(formData.getValidationMessages()).to.deep.equal([
+        '"test" is not at least 5 characters',
+        '"" is not "test"',
+        '"" is not "test"',
+        '"" is not "test"',
+        '"" is not "test"'
+      ]);
+      expect(formData.getGroupedValidationMessages()).to.deep.equal({
         firstName: [
           '"test" is not at least 5 characters'
         ],
@@ -478,18 +578,18 @@ describe('form data factory', function() {
 
       formData.validate();
 
-      expect(formData.getImmutable().getIn(['firstName', 'isValid'])).to.be.false;
-      expect(formData.getImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
-      expect(formData.getImmutable().getIn(['lastName', 'isValid'])).to.be.false;
-      expect(formData.getImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
+      expect(formData.asImmutable().getIn(['firstName', 'isValid'])).to.be.false;
+      expect(formData.asImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
+      expect(formData.asImmutable().getIn(['lastName', 'isValid'])).to.be.false;
+      expect(formData.asImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
 
       formData.disableValidation('firstName');
       formData.validate();
 
-      expect(formData.getImmutable().getIn(['firstName', 'isValid'])).to.be.null;
-      expect(formData.getImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal([]);
-      expect(formData.getImmutable().getIn(['lastName', 'isValid'])).to.be.false;
-      expect(formData.getImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
+      expect(formData.asImmutable().getIn(['firstName', 'isValid'])).to.be.null;
+      expect(formData.asImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal([]);
+      expect(formData.asImmutable().getIn(['lastName', 'isValid'])).to.be.false;
+      expect(formData.asImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
     });
 
     it('should be able to disable validation for all fields', function() {
@@ -497,18 +597,18 @@ describe('form data factory', function() {
 
       formData.validate();
 
-      expect(formData.getImmutable().getIn(['firstName', 'isValid'])).to.be.false;
-      expect(formData.getImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
-      expect(formData.getImmutable().getIn(['lastName', 'isValid'])).to.be.false;
-      expect(formData.getImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
+      expect(formData.asImmutable().getIn(['firstName', 'isValid'])).to.be.false;
+      expect(formData.asImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
+      expect(formData.asImmutable().getIn(['lastName', 'isValid'])).to.be.false;
+      expect(formData.asImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
 
       formData.disableValidation();
       formData.validate();
 
-      expect(formData.getImmutable().getIn(['firstName', 'isValid'])).to.be.null;
-      expect(formData.getImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal([]);
-      expect(formData.getImmutable().getIn(['lastName', 'isValid'])).to.be.null;
-      expect(formData.getImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal([]);
+      expect(formData.asImmutable().getIn(['firstName', 'isValid'])).to.be.null;
+      expect(formData.asImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal([]);
+      expect(formData.asImmutable().getIn(['lastName', 'isValid'])).to.be.null;
+      expect(formData.asImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal([]);
     });
 
     it('should be able to enable validation for one field', function() {
@@ -516,26 +616,26 @@ describe('form data factory', function() {
 
       formData.validate();
 
-      expect(formData.getImmutable().getIn(['firstName', 'isValid'])).to.be.false;
-      expect(formData.getImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
-      expect(formData.getImmutable().getIn(['lastName', 'isValid'])).to.be.false;
-      expect(formData.getImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
+      expect(formData.asImmutable().getIn(['firstName', 'isValid'])).to.be.false;
+      expect(formData.asImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
+      expect(formData.asImmutable().getIn(['lastName', 'isValid'])).to.be.false;
+      expect(formData.asImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
 
       formData.disableValidation('firstName');
       formData.validate();
 
-      expect(formData.getImmutable().getIn(['firstName', 'isValid'])).to.be.null;
-      expect(formData.getImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal([]);
-      expect(formData.getImmutable().getIn(['lastName', 'isValid'])).to.be.false;
-      expect(formData.getImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
+      expect(formData.asImmutable().getIn(['firstName', 'isValid'])).to.be.null;
+      expect(formData.asImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal([]);
+      expect(formData.asImmutable().getIn(['lastName', 'isValid'])).to.be.false;
+      expect(formData.asImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
 
       formData.enableValidation('firstName');
       formData.validate();
 
-      expect(formData.getImmutable().getIn(['firstName', 'isValid'])).to.be.false;
-      expect(formData.getImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
-      expect(formData.getImmutable().getIn(['lastName', 'isValid'])).to.be.false;
-      expect(formData.getImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
+      expect(formData.asImmutable().getIn(['firstName', 'isValid'])).to.be.false;
+      expect(formData.asImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
+      expect(formData.asImmutable().getIn(['lastName', 'isValid'])).to.be.false;
+      expect(formData.asImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
     });
 
     it('should be able to enable validation for all fields', function() {
@@ -543,59 +643,78 @@ describe('form data factory', function() {
 
       formData.validate();
 
-      expect(formData.getImmutable().getIn(['firstName', 'isValid'])).to.be.false;
-      expect(formData.getImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
-      expect(formData.getImmutable().getIn(['lastName', 'isValid'])).to.be.false;
-      expect(formData.getImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
+      expect(formData.asImmutable().getIn(['firstName', 'isValid'])).to.be.false;
+      expect(formData.asImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
+      expect(formData.asImmutable().getIn(['lastName', 'isValid'])).to.be.false;
+      expect(formData.asImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
 
       formData.disableValidation();
       formData.validate();
 
-      expect(formData.getImmutable().getIn(['firstName', 'isValid'])).to.be.null;
-      expect(formData.getImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal([]);
-      expect(formData.getImmutable().getIn(['lastName', 'isValid'])).to.be.null;
-      expect(formData.getImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal([]);
+      expect(formData.asImmutable().getIn(['firstName', 'isValid'])).to.be.null;
+      expect(formData.asImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal([]);
+      expect(formData.asImmutable().getIn(['lastName', 'isValid'])).to.be.null;
+      expect(formData.asImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal([]);
 
       formData.enableValidation();
       formData.validate();
 
-      expect(formData.getImmutable().getIn(['firstName', 'isValid'])).to.be.false;
-      expect(formData.getImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
-      expect(formData.getImmutable().getIn(['lastName', 'isValid'])).to.be.false;
-      expect(formData.getImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
+      expect(formData.asImmutable().getIn(['firstName', 'isValid'])).to.be.false;
+      expect(formData.asImmutable().getIn(['firstName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
+      expect(formData.asImmutable().getIn(['lastName', 'isValid'])).to.be.false;
+      expect(formData.asImmutable().getIn(['lastName', 'validationErrors']).toArray()).to.deep.equal(['"" is not "test"']);
     });
-  });
 
-  it('should be able to add fields after initial creation', function() {
-    var formData = formDataFactory(configSingle);
+    it('should be able to tell if a field has been validated', function() {
+      var formData = formDataFactory(configTwoValidation);
+      formData.validate('firstName');
 
-    formData.addField('lastName', {});
+      expect(formData.hasBeenValidated('firstName')).to.be.true;
+      expect(formData.hasBeenValidated('lastName')).to.be.false;
+    });
 
-    expect(formData.get()).to.deep.equal({
-      firstName: '',
-      lastName: ''
+    it('should be able to tell if the all field of form have been validated', function() {
+      var formData = formDataFactory(configTwoValidation);
+      formData.validate();
+
+      expect(formData.hasBeenValidated()).to.be.true;
+    });
+
+    it('should be able to tell what field have not been validated', function() {
+      var formData = formDataFactory(configTwoValidation);
+
+      expect(formData.hasBeenValidated()).to.deep.equal([
+        'firstName',
+        'lastName'
+      ]);
+
+      formData.validate('firstName');
+
+      expect(formData.hasBeenValidated()).to.deep.equal([
+        'lastName'
+      ]);
     });
   });
 
   describe('diff testing', function() {
     it('should equate to false when a value has changed', function() {
       var formData = formDataFactory(configBasic);
-      var initialData = formData.getImmutable();
+      var initialData = formData.asImmutable();
 
       formData.set('firstName', 'test');
 
-      var changedData = formData.getImmutable();
+      var changedData = formData.asImmutable();
 
       expect(initialData === changedData).to.be.false;
     });
 
     it('should equate to true when a value has not changed from initial', function() {
       var formData = formDataFactory(configBasic);
-      var initialData = formData.getImmutable();
+      var initialData = formData.asImmutable();
 
       formData.set('firstName', '');
 
-      var changedData = formData.getImmutable();
+      var changedData = formData.asImmutable();
 
       expect(initialData === changedData).to.be.true;
     });
@@ -607,11 +726,11 @@ describe('form data factory', function() {
 
       formData.validate();
 
-      var changedData1 = formData.getImmutable();
+      var changedData1 = formData.asImmutable();
 
       formData.validate();
 
-      var changedData2 = formData.getImmutable();
+      var changedData2 = formData.asImmutable();
 
       expect(changedData1 === changedData2).to.be.true;
     });
