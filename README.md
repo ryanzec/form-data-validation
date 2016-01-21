@@ -1,6 +1,8 @@
 # Form Data Validator
 
-A framework agnostic javascript data validation solution (designed with json based form data in mind)
+This provides a framework for dealing with form data / validation using the Immutable.js library as the core data structure.
+
+**API IS VOLATILE RIGHT NOW**
 
 ## Docs
 
