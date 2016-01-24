@@ -290,7 +290,7 @@ describe('validator factory', function() {
           expect(this.test).to.equal('what?');
           done();
         },
-        context: obj
+        thisContext: obj
       }]
     });
     myValidator.validate('testtestt');

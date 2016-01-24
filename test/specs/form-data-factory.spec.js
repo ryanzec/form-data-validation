@@ -356,6 +356,17 @@ describe('form data factory', function() {
       expect(helpers.isValid(formData, 'firstName')).to.be.true;
     });
 
+    it('should be able to validate multiple fields', function() {
+      var formData = formDataFactory(configValidation);
+
+      formData = helpers.set(formData, 'firstName', 'test');
+      formData = helpers.set(formData, 'lastName', 'test');
+      formData = helpers.validate(formData, 'firstName', 'lastName');
+
+      expect(helpers.isValid(formData, 'firstName')).to.be.true;
+      expect(helpers.isValid(formData, 'lastName')).to.be.true;
+    });
+
     it('should validate to false for all fields', function() {
       var formData = formDataFactory(configValidation);
 
@@ -681,6 +692,27 @@ describe('form data factory', function() {
       expect(helpers.hasBeenValidated(formData)).to.deep.equal([
         'lastName'
       ]);
+    });
+
+    it('should pass the form data immutable object as a parameter to the validate method', function(done) {
+      var formData = formDataFactory({
+        fields: {
+          firstName: {
+            validatorOptions: {
+              validators: [{
+                validator: function(value, options, context) {
+                  expect(context.getIn(['lastName', 'value'])).to.equal('last');
+                  done();
+                },
+              }]
+            }
+          },
+          lastName: {}
+        }
+      });
+
+      formData = helpers.set(formData, 'lastName', 'last');
+      formData = helpers.validate(formData, 'firstName');
     });
   });
 

@@ -1,7 +1,7 @@
 module.exports = function(immutableStructure, fieldName) {
-  if (fieldName) {
+  if (arguments.length === 2) {
     if (immutableStructure.getIn([fieldName, 'validator']).isActive()) {
-      immutableStructure.getIn([fieldName, 'validator']).validate(immutableStructure.getIn([fieldName, 'value']));
+      immutableStructure.getIn([fieldName, 'validator']).validate(immutableStructure.getIn([fieldName, 'value']), immutableStructure);
       immutableStructure = immutableStructure.setIn([fieldName, 'isValid'], immutableStructure.getIn([fieldName, 'validator']).valid);
       immutableStructure = immutableStructure.updateIn([fieldName, 'validationErrors'], function(list) {
         if (immutableStructure.getIn([fieldName, 'validator']).validationErrors.length === 0) {
@@ -24,9 +24,12 @@ module.exports = function(immutableStructure, fieldName) {
       });
     }
   } else {
-    immutableStructure.forEach(function(field, fieldName) {
+    var fieldNames = arguments.length === 1
+      ? Object.keys(immutableStructure.toJSON())
+      : Array.prototype.slice.call(arguments).slice(1);
+    fieldNames.forEach(function(fieldName) {
       if (immutableStructure.getIn([fieldName, 'validator']).isActive()) {
-        immutableStructure.getIn([fieldName, 'validator']).validate(field.get('value'));
+        immutableStructure.getIn([fieldName, 'validator']).validate(immutableStructure.getIn([fieldName, 'value']), immutableStructure);
         immutableStructure = immutableStructure.setIn([fieldName, 'isValid'], immutableStructure.getIn([fieldName, 'validator']).valid);
         immutableStructure = immutableStructure.updateIn([fieldName, 'validationErrors'], function(list) {
           if (immutableStructure.getIn([fieldName, 'validator']).validationErrors.length === 0) {

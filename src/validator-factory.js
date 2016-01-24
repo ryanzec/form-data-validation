@@ -29,7 +29,7 @@ module.exports = function validatorFactoryCreate(options) {
 
   validator.validationErrors = [];
 
-  validator.validate = function validatorValidate(value) {
+  validator.validate = function validatorValidate(value, context) {
     if (options.isActive) {
       this.validationErrors = [];
       this.valid = true;
@@ -38,8 +38,8 @@ module.exports = function validatorFactoryCreate(options) {
       if (options.validators.length > 0) {
         if (!isValueEmpty(value) || options.allowEmpty !== true) {
           options.validators.forEach(function validatorValidateValidatorsLoop(validator) {
-            var context = validator.context || null;
-            if (validator.validator.call(context, value, validator.options) !== true) {
+            var thisContext = validator.thisContext || null;
+            if (validator.validator.call(thisContext, value, validator.options, context) !== true) {
               this.valid = false;
 
               if (validator.message) {
