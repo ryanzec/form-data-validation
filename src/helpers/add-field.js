@@ -3,7 +3,7 @@ var immutable = require('immutable');
 var validatorFactory = require('../validator-factory');
 
 module.exports = function(immutableStructure, fieldName, options) {
-  var initialValue = options.initialValue || '';
+  var initialValue = options.initialValue || options.initialValue === false ? options.initialValue : '';
   var validatorOptions = assign({
     initialValue: initialValue
   }, options.validatorOptions || {});
